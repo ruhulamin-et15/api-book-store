@@ -5,6 +5,7 @@ const {
   verifyUser,
   getSingleUser,
   updateUser,
+  deleteUser,
 } = require("../controllers/usersController");
 const upload = require("../middlewares/uploadFile");
 
@@ -18,6 +19,7 @@ usersRouter.post(
   processRegister
 );
 usersRouter.post("/users/verify", verifyUser);
-usersRouter.put("/users/:id", updateUser);
+usersRouter.put("/users/:id", upload.single("avatar"), updateUser);
+usersRouter.delete("/users/:id", deleteUser);
 
 module.exports = { usersRouter };

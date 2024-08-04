@@ -6,11 +6,14 @@ const { errorResponse } = require("./controllers/responseController");
 const { booksRouter } = require("./routers/booksRouter");
 const { usersRouter } = require("./routers/usersRouter");
 const morgan = require("morgan");
+const { authRouter } = require("./routers/authRouter");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
-app.use(express.json());
 app.use(morgan("dev"));
+app.use(express.json());
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -18,6 +21,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api", authorsRouter);
 app.use("/api", booksRouter);
 app.use("/api", usersRouter);
+app.use("/api", authRouter);
 
 //client error handling
 app.use((req, res, next) => {

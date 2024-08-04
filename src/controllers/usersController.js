@@ -121,7 +121,7 @@ const verifyUser = async (req, res, next) => {
 //all user can be update
 const updateUser = async (req, res, next) => {
   const id = req.params.id;
-  const { name, password, phone, address } = req.body;
+  const { name, phone, address } = req.body;
 
   try {
     if (!req.file) {
@@ -131,7 +131,6 @@ const updateUser = async (req, res, next) => {
 
     const updatedUser = {
       name,
-      password,
       phone,
       address,
       avatar: userAvatar,
@@ -140,10 +139,27 @@ const updateUser = async (req, res, next) => {
     if (!findUser) {
       throw createError(404, "user not found in database");
     }
-    await Users.findByIdAndUpdate(id, updatedUser);
+    await Users.findByIdAndUpdate(id, updatedUser, { new: true });
     return successResponse(res, {
       statusCode: 200,
       message: "user updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteUser = async (req, res, next) => {
+  const id = req.params.id;
+  try {
+    const matchUser = await Users.findById(id);
+    if (!matchUser) {
+      throw createError(404, "user not found!");
+    }
+    await Users.findByIdAndDelete(id);
+    return successResponse(res, {
+      statusCode: 200,
+      message: "user deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -156,4 +172,5 @@ module.exports = {
   processRegister,
   verifyUser,
   updateUser,
+  deleteUser,
 };
