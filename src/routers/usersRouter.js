@@ -8,18 +8,23 @@ const {
   deleteUser,
 } = require("../controllers/usersController");
 const upload = require("../middlewares/uploadFile");
+const { isLoggedIn, isLoggedOut } = require("../middlewares/auth");
 
 const usersRouter = Router();
 
-usersRouter.get("/users", getUsers);
+//private route
+usersRouter.get("/users", isLoggedIn, getUsers);
+usersRouter.delete("/users/:id", isLoggedIn, deleteUser);
+usersRouter.put("/users/:id", upload.single("avatar"), isLoggedIn, updateUser);
+
+//public route
 usersRouter.get("/users/:id", getSingleUser);
 usersRouter.post(
   "/users/process-register",
   upload.single("avatar"),
+  isLoggedOut,
   processRegister
 );
-usersRouter.post("/users/verify", verifyUser);
-usersRouter.put("/users/:id", upload.single("avatar"), updateUser);
-usersRouter.delete("/users/:id", deleteUser);
+usersRouter.post("/users/verify", isLoggedOut, verifyUser);
 
 module.exports = { usersRouter };

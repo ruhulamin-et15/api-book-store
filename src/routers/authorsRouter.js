@@ -7,14 +7,18 @@ const {
   deleteAuthor,
 } = require("../controllers/authorsController");
 const { getBooksByAuthor } = require("../controllers/booksController");
+const { isLoggedIn } = require("../middlewares/auth");
 
 const authorsRouter = Router();
 
-authorsRouter.get("/authors", getAuthors);
+//public route
 authorsRouter.get("/authors/:id", getSingleAuthor);
 authorsRouter.get("/authors/:id/books", getBooksByAuthor);
-authorsRouter.post("/authors", createAuthor);
-authorsRouter.put("/authors/:id", updateAuthor);
-authorsRouter.delete("/authors/:id", deleteAuthor);
+
+//private route
+authorsRouter.get("/authors", isLoggedIn, getAuthors);
+authorsRouter.post("/authors", isLoggedIn, createAuthor);
+authorsRouter.put("/authors/:id", isLoggedIn, updateAuthor);
+authorsRouter.delete("/authors/:id", isLoggedIn, deleteAuthor);
 
 module.exports = { authorsRouter };

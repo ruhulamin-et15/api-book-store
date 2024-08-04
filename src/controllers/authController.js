@@ -23,7 +23,11 @@ const loginUser = async (req, res, next) => {
       throw createError(403, "you are banned, please contact authority");
     }
     //token, cookie
-    const accessToken = createJSONWebToken({ email }, jwtAccessKey, "10m");
+    const accessToken = createJSONWebToken(
+      { _id: user._id },
+      jwtAccessKey,
+      "10m"
+    );
     res.cookie("access_token", accessToken, {
       maxAge: 15 * 60 * 1000, //15min
       httpOnly: true,
@@ -34,7 +38,6 @@ const loginUser = async (req, res, next) => {
     return successResponse(res, {
       statusCode: 200,
       message: "user login successfully",
-      payload: user,
     });
   } catch (error) {
     next(error);
