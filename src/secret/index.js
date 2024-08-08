@@ -10,6 +10,7 @@ const jwtAccessKey = process.env.JWT_ACCESS_KEY;
 const smtpUserName = process.env.SMTP_USER_NAME;
 const smtpPassword = process.env.SMTP_PASSWORD;
 const clientURL = process.env.CLIENT_URL;
+const forgetPasswordKey = process.env.JWT_FORGET_PASSWORD;
 
 module.exports = {
   serverPort,
@@ -22,4 +23,5 @@ module.exports = {
   smtpPassword,
   clientURL,
   jwtAccessKey,
+  forgetPasswordKey,
 };

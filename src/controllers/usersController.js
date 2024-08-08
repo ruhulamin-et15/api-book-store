@@ -1,6 +1,5 @@
 const createError = require("http-errors");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
 const Users = require("../models/usersModel");
 const { successResponse } = require("./responseController");
 const { createJSONWebToken } = require("../helper/jsonwebtoken");
@@ -121,7 +120,6 @@ const verifyUser = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, jwtActivationKey);
-    console.log(decoded);
     const existEmail = await Users.findOne({ email: decoded.email });
 
     if (existEmail) {
@@ -234,42 +232,6 @@ const manageAdminStatus = async (req, res, next) => {
   }
 };
 
-const updatePassword = async (req, res, next) => {
-  const userId = req.params.id;
-  const { email, oldPassword, newPassword } = req.body;
-
-  try {
-    const user = await findUserById(userId);
-    const isEmailMatch = user.email === email;
-    const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
-    const isSamePassword = await bcrypt.compare(newPassword, user.password);
-    const updates = { password: newPassword, new: true };
-
-    if (isSamePassword) {
-      throw createError(401, "your new password is same to old password");
-    } else if (!isEmailMatch) {
-      throw createError(
-        404,
-        "your email is incorrect!, please enter a correct email"
-      );
-    } else if (!isPasswordMatch) {
-      throw createError(
-        404,
-        "your old password is incorrect!, please enter correct password"
-      );
-    }
-
-    await Users.findByIdAndUpdate(userId, updates);
-
-    return successResponse(res, {
-      statusCode: 200,
-      message: "user password updated successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 module.exports = {
   getUsers,
   getSingleUser,
@@ -279,5 +241,4 @@ module.exports = {
   deleteUser,
   manageUserStatus,
   manageAdminStatus,
-  updatePassword,
 };
