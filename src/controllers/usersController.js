@@ -5,17 +5,40 @@ const { successResponse } = require("./responseController");
 const { createJSONWebToken } = require("../helper/jsonwebtoken");
 const { jwtActivationKey, clientURL } = require("../secret");
 const { emailWithNodeMail } = require("../helper/email");
+const { findUserById } = require("../services");
 
 const getUsers = async (req, res, next) => {
   try {
-    const users = await Users.find().select("-password");
-    if (users.length === 0) {
-      throw createError(404, "users not found");
-    }
+    const search = req.query.search || "";
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 5;
+    const searchRegExp = new RegExp(".*" + search + ".*", "i");
+    const filter = {
+      $or: [
+        { name: { $regex: searchRegExp } },
+        { email: { $regex: searchRegExp } },
+        { phone: { $regex: searchRegExp } },
+      ],
+    };
+    const options = { password: 0 };
+
+    const users = await Users.find(filter, options)
+      .limit(limit)
+      .skip((page - 1) * limit);
+    const count = await Users.find(filter).countDocuments();
+
+    if (!users || users.length === 0) throw createError(404, "no users found!");
+
     return successResponse(res, {
       statusCode: 200,
       message: "users were return successfully",
-      payload: { users },
+      payload: {
+        users,
+        totalPages: Math.ceil(count / limit),
+        currentPage: page,
+        previousPage: page - 1 > 0 ? page - 1 : null,
+        nextPage: page + 1 <= Math.ceil(count / limit) ? page + 1 : null,
+      },
     });
   } catch (error) {
     next(error);
@@ -23,12 +46,10 @@ const getUsers = async (req, res, next) => {
 };
 
 const getSingleUser = async (req, res, next) => {
-  const id = req.params.id;
+  const userId = req.params.id;
+  const options = { password: 0 };
   try {
-    const user = await Users.findById(id).select("-password");
-    if (!user) {
-      throw createError(404, "user not found");
-    }
+    const user = await findUserById(userId, options);
     return successResponse(res, {
       statusCode: 200,
       message: "user return successfully",
@@ -118,9 +139,9 @@ const verifyUser = async (req, res, next) => {
   }
 };
 
-//all user can be update
+//all user can be update them
 const updateUser = async (req, res, next) => {
-  const id = req.params.id;
+  const userId = req.params.id;
   const { name, phone, address } = req.body;
 
   try {
@@ -135,11 +156,8 @@ const updateUser = async (req, res, next) => {
       address,
       avatar: userAvatar,
     };
-    const findUser = await Users.findById(id);
-    if (!findUser) {
-      throw createError(404, "user not found in database");
-    }
-    await Users.findByIdAndUpdate(id, updatedUser, { new: true });
+    await findUserById(userId);
+    await Users.findByIdAndUpdate(userId, updatedUser, { new: true });
     return successResponse(res, {
       statusCode: 200,
       message: "user updated successfully",
@@ -150,13 +168,10 @@ const updateUser = async (req, res, next) => {
 };
 
 const deleteUser = async (req, res, next) => {
-  const id = req.params.id;
+  const userId = req.params.id;
   try {
-    const matchUser = await Users.findById(id);
-    if (!matchUser) {
-      throw createError(404, "user not found!");
-    }
-    await Users.findByIdAndDelete(id);
+    await findUserById(userId);
+    await Users.findByIdAndDelete(userId);
     return successResponse(res, {
       statusCode: 200,
       message: "user deleted successfully",
@@ -169,15 +184,12 @@ const deleteUser = async (req, res, next) => {
 const manageUserStatus = async (req, res, next) => {
   const userId = req.params.id;
   try {
-    const findUser = await Users.findById(userId);
-    if (!findUser) {
-      throw createError(404, "user not found");
-    }
+    const user = await findUserById(userId);
     const options = { new: true };
     const updateToBan = { isBanned: true };
     const updateToUnban = { isBanned: false };
 
-    if (findUser.isBanned === false) {
+    if (user.isBanned === false) {
       await Users.findByIdAndUpdate(userId, updateToBan, options);
       return successResponse(res, {
         statusCode: 200,
@@ -198,15 +210,12 @@ const manageUserStatus = async (req, res, next) => {
 const manageAdminStatus = async (req, res, next) => {
   const userId = req.params.id;
   try {
-    const findUser = await Users.findById(userId);
-    if (!findUser) {
-      throw createError(404, "user not found");
-    }
+    const user = await findUserById(userId);
     const options = { new: true };
     const adminTrue = { isAdmin: true };
     const adminFalse = { isAdmin: false };
 
-    if (findUser.isAdmin === false) {
+    if (user.isAdmin === false) {
       await Users.findByIdAndUpdate(userId, adminTrue, options);
       return successResponse(res, {
         statusCode: 200,
