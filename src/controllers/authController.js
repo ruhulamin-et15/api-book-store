@@ -4,7 +4,12 @@ const jwt = require("jsonwebtoken");
 const Users = require("../models/usersModel");
 const { successResponse } = require("./responseController");
 const { createJSONWebToken } = require("../helper/jsonwebtoken");
-const { jwtAccessKey, forgetPasswordKey, clientURL } = require("../secret");
+const {
+  jwtAccessKey,
+  forgetPasswordKey,
+  clientURL,
+  jwtRefreshKey,
+} = require("../secret");
 const { findUserById } = require("../services");
 const { emailWithNodeMail } = require("../helper/email");
 
@@ -26,9 +31,16 @@ const loginUser = async (req, res, next) => {
       throw createError(403, "you are banned, please contact authority");
     }
     //token, cookie
-    const accessToken = createJSONWebToken({ user }, jwtAccessKey, "15m");
+    const accessToken = createJSONWebToken({ user }, jwtAccessKey, "1m");
     res.cookie("access_token", accessToken, {
-      maxAge: 15 * 60 * 1000, //15min
+      maxAge: 1 * 60 * 1000, //15min
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+    const refreshToken = createJSONWebToken({ user }, jwtRefreshKey, "7d");
+    res.cookie("refresh_token", refreshToken, {
+      maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
       httpOnly: true,
       secure: true,
       sameSite: "none",
@@ -46,6 +58,7 @@ const loginUser = async (req, res, next) => {
 const logoutUser = async (req, res, next) => {
   try {
     res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
     return successResponse(res, {
       statusCode: 200,
       message: "user logout successfully",
@@ -149,10 +162,61 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const handleRefreshToken = async (req, res, next) => {
+  const oldRefreshToken = req.cookies.refresh_token;
+  try {
+    const decodedToken = jwt.verify(oldRefreshToken, jwtRefreshKey);
+    if (!decodedToken) {
+      throw createError(401, "invalid refresh token, please login again");
+    }
+
+    const accessToken = createJSONWebToken(
+      decodedToken.user,
+      jwtAccessKey,
+      "1m"
+    );
+    res.cookie("access_token", accessToken, {
+      maxAge: 1 * 60 * 1000, //15min
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    return successResponse(res, {
+      statusCode: 200,
+      message: "access token genarated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const handleProtectedRoute = async (req, res, next) => {
+  const accessToken = req.cookies.access_token;
+  try {
+    if (!accessToken) {
+      throw createError(404, "access token not found");
+    }
+    const decodedToken = jwt.verify(accessToken, jwtAccessKey);
+    if (!decodedToken) {
+      throw createError(401, "invalid access token, please login again");
+    }
+
+    return successResponse(res, {
+      statusCode: 200,
+      message: "access token return successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   loginUser,
   logoutUser,
   updatePassword,
   forgetPassword,
   resetPassword,
+  handleRefreshToken,
+  handleProtectedRoute,
 };
