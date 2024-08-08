@@ -166,6 +166,25 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+const handleBanUser = async (req, res, next) => {
+  const userId = req.params.id;
+  try {
+    const findUser = await Users.findById(userId);
+    if (!findUser) {
+      throw createError(404, "user not found");
+    }
+    const options = { new: true };
+    const updates = { isBanned: true };
+    await Users.findByIdAndUpdate(userId, updates, options).select("-password");
+    return successResponse(res, {
+      statusCode: 200,
+      message: "user was banned successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   getSingleUser,
@@ -173,4 +192,5 @@ module.exports = {
   verifyUser,
   updateUser,
   deleteUser,
+  handleBanUser,
 };

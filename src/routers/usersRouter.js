@@ -6,6 +6,7 @@ const {
   getSingleUser,
   updateUser,
   deleteUser,
+  handleBanUser,
 } = require("../controllers/usersController");
 const upload = require("../middlewares/uploadFile");
 const { isLoggedIn, isLoggedOut, isAdmin } = require("../middlewares/auth");
@@ -23,6 +24,7 @@ usersRouter.put(
   isAdmin,
   updateUser
 );
+usersRouter.put("/users/ban-user/:id", isLoggedIn, isAdmin, handleBanUser);
 
 //public route
 usersRouter.post(
