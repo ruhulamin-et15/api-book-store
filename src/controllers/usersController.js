@@ -166,7 +166,7 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-const handleBanUser = async (req, res, next) => {
+const manageUserStatus = async (req, res, next) => {
   const userId = req.params.id;
   try {
     const findUser = await Users.findById(userId);
@@ -174,12 +174,51 @@ const handleBanUser = async (req, res, next) => {
       throw createError(404, "user not found");
     }
     const options = { new: true };
-    const updates = { isBanned: true };
-    await Users.findByIdAndUpdate(userId, updates, options).select("-password");
-    return successResponse(res, {
-      statusCode: 200,
-      message: "user was banned successfully",
-    });
+    const updateToBan = { isBanned: true };
+    const updateToUnban = { isBanned: false };
+
+    if (findUser.isBanned === false) {
+      await Users.findByIdAndUpdate(userId, updateToBan, options);
+      return successResponse(res, {
+        statusCode: 200,
+        message: "user was banned successfully",
+      });
+    } else {
+      await Users.findByIdAndUpdate(userId, updateToUnban, options);
+      return successResponse(res, {
+        statusCode: 200,
+        message: "user was unbanned successfully",
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const manageAdminStatus = async (req, res, next) => {
+  const userId = req.params.id;
+  try {
+    const findUser = await Users.findById(userId);
+    if (!findUser) {
+      throw createError(404, "user not found");
+    }
+    const options = { new: true };
+    const adminTrue = { isAdmin: true };
+    const adminFalse = { isAdmin: false };
+
+    if (findUser.isAdmin === false) {
+      await Users.findByIdAndUpdate(userId, adminTrue, options);
+      return successResponse(res, {
+        statusCode: 200,
+        message: "user updated to Admin successfully",
+      });
+    } else {
+      await Users.findByIdAndUpdate(userId, adminFalse, options);
+      return successResponse(res, {
+        statusCode: 200,
+        message: "updated to normal user successfully",
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -192,5 +231,6 @@ module.exports = {
   verifyUser,
   updateUser,
   deleteUser,
-  handleBanUser,
+  manageUserStatus,
+  manageAdminStatus,
 };
