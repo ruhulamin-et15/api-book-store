@@ -8,6 +8,7 @@ const {
   deleteUser,
   manageUserStatus,
   manageAdminStatus,
+  updatePassword,
 } = require("../controllers/usersController");
 const upload = require("../middlewares/uploadFile");
 const { isLoggedIn, isLoggedOut, isAdmin } = require("../middlewares/auth");
@@ -37,6 +38,7 @@ usersRouter.put(
   isAdmin,
   manageAdminStatus
 );
+usersRouter.put("/users/update-password/:id", isLoggedIn, updatePassword);
 
 //public route
 usersRouter.post(
