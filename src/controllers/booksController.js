@@ -66,8 +66,7 @@ const createBook = async (req, res, next) => {
     );
     return successResponse(res, {
       statusCode: 201,
-      message: "books created successfully",
-      payload: book,
+      message: "book created successfully",
     });
   } catch (error) {
     next(error);

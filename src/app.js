@@ -1,13 +1,16 @@
+//external imports
 const express = require("express");
 const bodyParser = require("body-parser");
 const createError = require("http-errors");
+const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
+
+//internal imports
 const { authorsRouter } = require("./routers/authorsRouter");
 const { errorResponse } = require("./controllers/responseController");
 const { booksRouter } = require("./routers/booksRouter");
 const { usersRouter } = require("./routers/usersRouter");
-const morgan = require("morgan");
 const { authRouter } = require("./routers/authRouter");
-const cookieParser = require("cookie-parser");
 const { categoriesRouter } = require("./routers/categoriesRouter");
 
 const app = express();

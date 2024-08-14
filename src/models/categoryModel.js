@@ -13,6 +13,7 @@ const categorySchema = new Schema(
       required: [true, "category slug is required"],
       lowercase: true,
     },
+    books: [{ type: Schema.Types.ObjectId, ref: "Books" }],
   },
   { timestamps: true }
 );

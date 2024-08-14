@@ -24,6 +24,11 @@ const booksSchema = new Schema(
       ref: "Authors",
       required: true,
     },
+    category: {
+      type: Schema.ObjectId,
+      ref: "Categories",
+      required: [true, "Please select category"],
+    },
   },
   { timestamps: true }
 );
