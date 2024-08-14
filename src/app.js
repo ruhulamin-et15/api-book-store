@@ -8,6 +8,7 @@ const { usersRouter } = require("./routers/usersRouter");
 const morgan = require("morgan");
 const { authRouter } = require("./routers/authRouter");
 const cookieParser = require("cookie-parser");
+const { categoriesRouter } = require("./routers/categoriesRouter");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/api", authorsRouter);
 app.use("/api", booksRouter);
 app.use("/api", usersRouter);
 app.use("/api", authRouter);
+app.use("/api", categoriesRouter);
 
 //client error handling
 app.use((req, res, next) => {
